@@ -49,11 +49,10 @@ function handleDragEnter(event) {
 
 function handleDragLeave(event) {
   event.preventDefault();
-  /* event.currentTarget.classList.remove('highlight'); */
   // Verificar si el puntero del ratón ha salido del drop_zone o si ha entrado en otro elemento interno
   if (!event.relatedTarget || (event.relatedTarget !== this && !this.contains(event.relatedTarget))) {
     this.classList.remove('highlight');
-}
+  }
 }
 
 
