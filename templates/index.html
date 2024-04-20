@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de predicción de música</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Conversor de audio a MIDI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Modelo de predicción de música</h1>
+    <h1>Conversor de audio a MIDI <span> <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" id="logo"></span></h1>
+    
     <div class="container">
         <form action="/predict" method="post" enctype="multipart/form-data">
-            <div id="drop_zone" ondrop="dropHandler(event);">
+            <div id="drop_zone">
                 <p>Arrastra un archivo de audio aquí</p>
             </div>              
-            <label id= "file-label"class="button" for="audio_file">Seleccione un archivo de audio</label>
-            <span id="file-name" class="file-name">Ningún archivo seleccionado</span>
+            <div class="flex-container">
+                <label id= "file-label"class="button" for="audio_file">Seleccione un archivo de audio</label>
+                <span id="file-name" class="file-name">Ningún archivo seleccionado</span>
+            </div>
             <input id="audio_file" type="file"  name="file" onchange="updateFileName(this)">
-            <input class="button" type="submit" value="Convertir">
+            <input class="button" type="submit" value="Convertir" id="">
         </form>
     </div>
     {% if wav_url %}
