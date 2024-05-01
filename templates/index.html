@@ -18,17 +18,22 @@
                 <label id= "file-label"class="button" for="audio_file">Seleccione un archivo de audio</label>
                 <span id="file-name" class="file-name">Ningún archivo seleccionado</span>
             </div>
-            <input id="audio_file" type="file"  name="file" onchange="updateFileName(this)">
-            <input class="button" type="submit" value="Convertir" id="">
+            <input id="audio_file" type="file"  name="file" onchange="selectFileHandler(this)">
+            <input id="convert_button" class="button disabled" type="submit" value="Convertir" disabled="disabled" >
         </form>
     </div>
     {% if wav_url %}
     <div class="container">
-        <h2>Reproducir Archivo MIDI resultante (sintetizado con Timidity):</h2>
-        <audio controls>
-            <source src="{{ wav_url }}" type="audio/wav">
-            Tu navegador no soporta la reproducción de archivos WAV.
-        </audio>
+        <div class="flex-container">
+            <h2>Reproducir Archivo MIDI resultante (sintetizado con Timidity):</h2>
+            <audio controls>
+                <source src="{{ wav_url }}" type="audio/wav">
+                Tu navegador no soporta la reproducción de archivos WAV.
+            </audio>
+            <a href="{{ wav_url }}" download class="button">Descargar WAV</a>
+            <a href="{{ midi_url }}" download class="button">Descargar MIDI</a>
+        </div>
+
     </div>
     {% endif %}
     <script src="{{ url_for('static', filename='js/input.js') }}"></script>

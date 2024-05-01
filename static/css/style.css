@@ -2,17 +2,30 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #333333;
+    background-color: #212529;
     color: #ffffff;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    row-gap: 30px;
+    text-align: center;
+    margin: 0 auto;
+    width: 500px;
+}
+h2 {
+    margin:0;
 }
 
 .container {
-    width: 50%;
+    display: block;
     margin: 50px auto;
-    padding: 20px;
-    background-color: #333333;
+    padding: 30px;
+    background-color: #2A2E32;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    width: 40%;
 }
 
 .highlight {
@@ -23,29 +36,28 @@ h1 {
     text-align: center;
     color: #ffffff;
 }
-
-form {
-    text-align: center;
-    width: 500px;
-    margin: 0 auto;
+audio {
+    width: 50%;
 }
 
 #file-label {
     display: inline;
     margin-bottom: 10px auto;
-    background-color: #626262;
+    background-color: #007bff;
 }
 input[type="submit"] {
     display: block;
     font-size: 20px;
-    margin: 20px auto;
+    margin: 0 auto;
     padding: 20px 60px;
 }
 
 input[type="file"] {
-    display: block;
-    margin: 0 auto 20px;
+    position:absolute;
     opacity: 0;
+}
+a {
+    text-decoration: none;
 }
 
 #file-name {
@@ -60,8 +72,10 @@ input[type="file"] {
 }
 .flex-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 30px;
 }
 #drop_zone {
     display: block;
@@ -72,7 +86,6 @@ input[type="file"] {
     text-align: center;
     cursor: pointer;
     color: #ccc;
-    margin: 25px auto;
 }
 .button {
     background-color: #007bff;
@@ -84,6 +97,11 @@ input[type="file"] {
     cursor: pointer;
 }
 
-.button:hover {
+.disabled {
+    background-color: #626262;
+    cursor: not-allowed;
+}
+
+.button:hover:not(.disabled) {
     background-color: #0056b3;
 }

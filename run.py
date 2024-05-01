@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, send_file
 from predict import get_midi_from_wav
 import torch
-from model import SimpleNN
+from model import CNN_Model
 import os
 import subprocess
 
@@ -16,10 +16,11 @@ output_size=88
 # Verificar si hay disponibilidad de GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Crear la red y moverla a la GPU si está disponible
-model = SimpleNN(input_size, output_size).to(device)
+harmonics=[0.5, 1, 2, 3, 4, 5, 6, 7]
+model = CNN_Model(harmonics).to(device)
 model.eval()
 # Ruta con los pesos del modelo
-model_path = 'all_7.pth'
+model_path = 'bp_all_7_no_logits.pth'
 # Carga los pesos al modelo
 model.load_state_dict(torch.load(model_path, map_location=device))
 
@@ -45,10 +46,11 @@ def predict():
     wav_file_path = 'output.wav'
     midi_to_wav(midi_file_path, wav_file_path)
 
-    # Devolver la URL del archivo WAV al usuario
+    # Devolver las URLs de los archivos MIDI y WAV al usuario
+    midi_url = f"/get_midi/{midi_file_path}"
     wav_url = f"/get_wav/{wav_file_path}"
     
-    return render_template('index.html', wav_url=wav_url)
+    return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 
 @app.route('/get_midi/<filename>')
 def get_midi(filename):
