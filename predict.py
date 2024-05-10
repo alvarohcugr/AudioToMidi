@@ -2,8 +2,11 @@ import torch
 import mido
 import numpy as np
 import librosa
-from constants import FRAME_DURATION 
-def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.5, note_thres=0.3, add_note_thres=0.7, note_duration_thres=0.12):
+from constants import FRAME_DURATION, N_BINS_PER_OCTAVE, N_BINS, F_MIN, SAMPLING_RATE, HOP_LENGTH
+import matplotlib.pyplot as plt
+
+
+def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
     # Tomar como candidatos peak onsets con probabilidad > 0.5
     # Calcula la matriz de diferencias para detectar los picos
     diff_tensor = torch.diff(output_onset, dim=1)
@@ -101,12 +104,16 @@ def predict(model, inputs):
       output_notes=torch.sigmoid(output_notes)
       output_onsets=torch.sigmoid(output_onsets)
 
+      visualize_piano_roll(output_notes, name='output_notes.png')
+      visualize_piano_roll(output_onsets, name='output_onsets.png')
+
       note_events=post_process_outputs(output_notes, output_onsets)
 
       predicted_pianoroll=note_events_to_piano_roll(note_events, output_notes.shape[0], output_notes.shape[1])
   return predicted_pianoroll
 
 def pianoroll_to_midi(piano_roll, tempo=500000):
+    piano_roll=piano_roll.T
     bpm=60_000_000/tempo
     TICK_DURATION=60/(bpm*480)
     # Crear archivo midi 
@@ -121,46 +128,49 @@ def pianoroll_to_midi(piano_roll, tempo=500000):
     # Añadir los mensajes del primer frame
     for i_note in range(0, last_frame.shape[0]):
       if (piano_roll[0][i_note]):
-        time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
-        track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=time))
+        track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=0))
     # Añadir los mensajes del resto de frames
     for i_frame in range(1, piano_roll.shape[0]):
       for i_note in range(0, last_frame.shape[0]):
         if (last_frame[i_note] and not piano_roll[i_frame][i_note]):
-          time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
-          track.append(mido.Message('note_off', note=i_note + 21, velocity=0, time=time))
+          tick_time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
+          track.append(mido.Message('note_off', note=i_note + 21, velocity=0, time=tick_time))
           last_time=i_frame
         elif (not last_frame[i_note] and piano_roll[i_frame][i_note]):
-          time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
-          track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=time))
+          tick_time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
+          track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=tick_time))
           last_time=i_frame
       last_frame=piano_roll[i_frame]
     return mid_new
 
-def get_wav(path, sr=16000):
+def get_wav(path, sr=SAMPLING_RATE):
   # Cargar el archivo .wav y obtener la señal y la tasa de muestreo
   return librosa.load(path, sr=sr)
 
 def get_cqt(y, sr):
   # Calcular el Constant-Q Transform (CQT)
-  cqt = np.abs(librosa.cqt(y, sr=sr, bins_per_octave=36, n_bins=252, fmin=27.5))
-
+  cqt = np.abs(librosa.cqt(y, sr=sr, bins_per_octave=N_BINS_PER_OCTAVE, n_bins=N_BINS, fmin=F_MIN, hop_length=HOP_LENGTH))
   return cqt
 
 def get_features(wav_file_path):
     y,sr=get_wav(wav_file_path)
     return get_cqt(y, sr)
+def visualize_piano_roll(piano_roll, name, cmap='Blues', title='Piano-Roll'):
+    plt.figure(figsize=(16, 4))
+    plt.imshow(piano_roll[:,800:1100], aspect='auto', cmap=cmap, vmin=0, vmax=1, origin='lower', extent=[0,piano_roll.shape[1], 0,  piano_roll.shape[0]], interpolation="none")
+    plt.xlabel('Tiempo')
+    plt.ylabel('Nota')
+    plt.title(title)
+    plt.savefig(name) # Guardar la imagen()
 
 def get_midi_from_wav(wav_file_path, model):
     # Obtener características
     features = get_features(wav_file_path)
-
     # Normalizar las características
-    features = (features - 0.014933423) / 0.048849646
+    features = (np.log(features+10e-7) - (-6.3362346)) / 2.29297
     # Predecir
     prediction = predict(model, features)
-
     # Convertir a formato MIDI
-    midi_file = pianoroll_to_midi(prediction.T)
+    midi_file = pianoroll_to_midi(prediction)
 
     return midi_file

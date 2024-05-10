@@ -79,3 +79,10 @@ dropZone.addEventListener('drop', dropHandler, false);
 dropZone.addEventListener('dragover', handleDragOver, false);
 dropZone.addEventListener('dragenter', handleDragEnter, false);
 dropZone.addEventListener('dragleave', handleDragLeave, false);
+// 
+var tempoInput = document.getElementById("tempo");
+var tempoValueSpan = document.getElementById("tempo-value");
+
+tempoInput.addEventListener("input", function() {
+    tempoValueSpan.textContent = this.value;
+});

@@ -25,6 +25,24 @@
     {% if wav_url %}
     <div class="container">
         <div class="flex-container">
+            <h2>Editar MIDI resultante:</h2>
+            <form action="/modify_midi" method="post">
+                <input type="hidden" name="midi_file_path" value="{{ midi_url }}">
+                <label for="tempo">Tempo:</label>
+                <input type="range" name="tempo" id="tempo" min="20" max="250" value="120" step="1">
+                <span id="tempo-value">120</span> BPM
+                <label for="instrument">Instrumento:</label>
+                <select name="instrument" id="instrument">
+                    <option value="0">Piano</option>
+                    <option value="25">Guitarra Acústica</option>
+                    <!-- Agrega más opciones según los instrumentos disponibles -->
+                </select>
+                <button type="submit">Modificar MIDI</button>
+            </form>          
+        </div>
+    </div>
+    <div class="container">
+        <div class="flex-container">
             <h2>Reproducir Archivo MIDI resultante (sintetizado con Timidity):</h2>
             <audio controls>
                 <source src="{{ wav_url }}" type="audio/wav">
