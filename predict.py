@@ -157,7 +157,7 @@ def get_features(wav_file_path):
     return get_cqt(y, sr)
 def visualize_piano_roll(piano_roll, name, cmap='Blues', title='Piano-Roll'):
     plt.figure(figsize=(16, 4))
-    plt.imshow(piano_roll[:,800:1100], aspect='auto', cmap=cmap, vmin=0, vmax=1, origin='lower', extent=[0,piano_roll.shape[1], 0,  piano_roll.shape[0]], interpolation="none")
+    plt.imshow(piano_roll, aspect='auto', cmap=cmap, vmin=0, vmax=1, origin='lower', extent=[0,piano_roll.shape[1], 0,  piano_roll.shape[0]], interpolation="none")
     plt.xlabel('Tiempo')
     plt.ylabel('Nota')
     plt.title(title)

@@ -19,9 +19,9 @@ harmonics=[0.5, 1, 2, 3, 4, 5, 6, 7]
 model = CNN_Model(harmonics).to(device)
 model.eval()
 # Ruta con los pesos del modelo
-model_path = 'deep_bp_all_7_ls_fl_log.pth'
+model_path = 'checkpoint_deep.pth'
 # Carga los pesos al modelo
-model.load_state_dict(torch.load(model_path, map_location=device))
+model.load_state_dict(torch.load(model_path, map_location=device)["model"])
 
 @app.route('/')
 def index():
@@ -54,7 +54,7 @@ def predict():
     # Devolver las URLs de los archivos MIDI y WAV al usuario
     midi_url = f"/get_midi/{midi_file_name}"
     wav_url = f"/get_wav/{wav_file_name}"
-    
+
     return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 
 @app.route('/modify_midi', methods=['POST'])
@@ -64,12 +64,22 @@ def modify_midi():
     # Obtener el tempo e instrumento seleccionados por el usuario desde el formulario
     tempo = int(request.form['tempo'])
     instrument = int(request.form['instrument'])
-
+    # Obtener las rutas locales a los archivos MIDI y WAV
+    midi_filename = midi_url.split('/')[-1]
+    wav_filename = midi_filename.replace('.mid', '.wav')
+    midi_path = "outputs/"+midi_filename
+    wav_path = "outputs/"+wav_filename
     # Modificar el archivo MIDI con el tempo e instrumento seleccionados
-    midi_path = "outputs/"+midi_url.split('/')[-1]
     modify_midi_file(midi_path, tempo, instrument)
-    
-    return render_template('index.html', midi_url=midi_url)
+    midi_to_wav(midi_path, wav_path)
+    # Cambiar nombres de los archivos MIDI y WAV
+    os.rename(midi_path, "outputs/mod_"+midi_filename)
+    os.rename(wav_path, "outputs/mod_"+wav_filename)
+    # Devolver las URLs de los archivos MIDI y WAV al usuario
+    wav_url = "/get_wav/mod_"+wav_filename
+    midi_url = "/get_midi/mod_"+midi_filename
+
+    return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 @app.route('/get_midi/<filename>')
 def get_midi(filename):
     # Enviar el archivo MIDI al usuario para su descarga
