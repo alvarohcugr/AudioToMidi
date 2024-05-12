@@ -73,11 +73,12 @@ def modify_midi():
     modify_midi_file(midi_path, tempo, instrument)
     midi_to_wav(midi_path, wav_path)
     # Cambiar nombres de los archivos MIDI y WAV
-    os.rename(midi_path, "outputs/mod_"+midi_filename)
-    os.rename(wav_path, "outputs/mod_"+wav_filename)
+    timestamp = int(time.time())
+    os.rename(midi_path, f"outputs/output{timestamp}.mid")
+    os.rename(wav_path, f"outputs/output{timestamp}.wav")
     # Devolver las URLs de los archivos MIDI y WAV al usuario
-    wav_url = "/get_wav/mod_"+wav_filename
-    midi_url = "/get_midi/mod_"+midi_filename
+    wav_url = f"/get_wav/output{timestamp}.wav"
+    midi_url = f"/get_midi/output{timestamp}.mid"
 
     return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 @app.route('/get_midi/<filename>')

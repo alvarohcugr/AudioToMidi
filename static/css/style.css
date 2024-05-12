@@ -5,17 +5,26 @@ body {
     background-color: #212529;
     color: #ffffff;
 }
-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    row-gap: 30px;
+#upload-form {
     text-align: center;
     margin: 0 auto;
     width: 500px;
 }
+
+.vflex {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    row-gap: 30px;
+}
+/* vflex inside flex-container selector:*/
+.flex-container > .vflex {
+    width: 40%;
+}
+
 h2 {
     margin:0;
+    display: block;
 }
 
 .container {
@@ -73,7 +82,7 @@ a {
 .flex-container {
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     row-gap: 30px;
 }
@@ -89,12 +98,14 @@ a {
 }
 .button {
     background-color: #007bff;
+    display: inline-block;
     color: #fff;
     border: none;
     padding: 10px 20px;
     font-size: 16px;
     border-radius: 4px;
     cursor: pointer;
+    margin: auto;
 }
 
 .disabled {
@@ -104,4 +115,81 @@ a {
 
 .button:hover:not(.disabled) {
     background-color: #0056b3;
+}
+select {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #333;
+    width: 100%;
+}
+
+/* Estilo cuando el select está enfocado */
+select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 15px;
+    background: #f0f8ff; /* Fondo azul claro */
+    outline: none;
+    border-radius: 10px;
+}
+
+/* Barra de progreso */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 15px;
+    cursor: pointer;
+    background: #007bff; /* Barra de progreso azul */
+    border-radius: 10px;
+}
+
+/* Control deslizante */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    background: #0056b3; /* Color de control deslizante azul oscuro */
+    border-radius: 50%;
+    margin-top: -5px; /* Alinear con la barra de progreso */
+}
+
+/* Estilo cuando el rango está enfocado */
+input[type="range"]:focus {
+    outline: none;
+}
+
+/* Estilo del rango cuando se arrastra */
+input[type="range"]:active::-webkit-slider-thumb {
+    background: #003f7f; 
+}
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 15px;
+    cursor: pointer;
+    background: #ffffff; 
+    border-radius: 10px;
+}
+input[type="range"]::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    background: #007bff; 
+    border-radius: 50%;
+    margin-top: -5px; 
+}
+input[type="range"]:active::-moz-range-thumb {
+    background: #0058b5;
+}
+input[type="range"]::-moz-range-progress {
+    background: #ffffff; 
 }
