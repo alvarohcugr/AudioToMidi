@@ -1,6 +1,9 @@
 # Usar una imagen base de Python
 FROM python:3.10-slim
 
+# Instalar timidity
+RUN apt-get update && apt-get install -y timidity
+
 # Establecer el directorio de trabajo en /app
 WORKDIR /app
 

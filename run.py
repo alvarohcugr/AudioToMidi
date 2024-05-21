@@ -2,7 +2,7 @@ import time
 from flask import Flask, render_template, request, send_file
 from predict import get_midi_from_wav
 import torch
-from model import CNN_Model
+from model import UNet
 import os
 import subprocess
 from midi_processing import modify_midi_file
@@ -16,10 +16,10 @@ app = Flask(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Crear la red y moverla a la GPU si está disponible
 harmonics=[0.5, 1, 2, 3, 4, 5, 6, 7]
-model = CNN_Model(harmonics).to(device)
+model=UNet(n_classes=1, harmonics=harmonics).to(device)
 model.eval()
 # Ruta con los pesos del modelo
-model_path = 'checkpoint_deep.pth'
+model_path = 'checkpoint_unet.pth'
 # Carga los pesos al modelo
 model.load_state_dict(torch.load(model_path, map_location=device)["model"])
 
@@ -100,6 +100,5 @@ def get_wav(filename):
     #os.remove(filename)
     
     return response
-
 if __name__ == '__main__':
     app.run(debug=True)

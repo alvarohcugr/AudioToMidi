@@ -6,43 +6,10 @@ from constants import FRAME_DURATION, N_BINS_PER_OCTAVE, N_BINS, F_MIN, SAMPLING
 import matplotlib.pyplot as plt
 
 
-def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
-    # Tomar como candidatos peak onsets con probabilidad > 0.5
-    # Calcula la matriz de diferencias para detectar los picos
-    diff_tensor = torch.diff(output_onset, dim=1)
-
-    # Encuentra las posiciones donde la diferencia cambia de positivo a negativo
-    positive_to_negative = torch.nonzero((diff_tensor[:, :-1] > 0) & (diff_tensor[:, 1:] < 0))
-
-    # Ajusta las posiciones para considerar el desplazamiento por torch.diff
-    onset_candidates = list(zip(positive_to_negative[:, 0], positive_to_negative[:, 1] + 1))
-
-    # Filtra los candidatos según el umbral
-    onset_candidates = [(i[0].item(), i[1].item()) for i in onset_candidates if output_onset[i[0].item(), i[1].item()] >= onset_thres]
-
+def post_process_outputs(output_notes, tolerance=4, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
     # Crear eventos de notas a partir de los candidatos y las probabilidades de notas
     note_events = []
-    for onset in onset_candidates[::-1]:  # Iterar en orden temporal inverso
-        start_time = onset[1]
-        pitch = onset[0]
-        end_time = start_time
-        under_thres=0
-        for t in range(start_time + 1, output_notes.shape[1]):
-            if (output_notes[pitch,t]<note_thres):
-                under_thres+=1
-            else:
-                under_thres=0
-                end_time=t
-            if (under_thres>=tolerance):
-                break
-        # No tener en cuenta la nota si es muy corta
-        note_duration=(end_time+1-start_time)*FRAME_DURATION
-        if note_duration < note_duration_thres:
-            continue
-
-        output_notes[pitch, start_time:end_time + 1] = 0
-        note_events.append({"start_time":start_time, "end_time":end_time, "pitch": pitch})
-    # Crear eventos de notas adicionarles a partir de las probabilidades de notas
+    # Crear eventos de notas adicionales a partir de las probabilidades de notas
     for pitch in range(output_notes.shape[0]):
         for frame in range(output_notes.shape[1]):
             likelihood=output_notes[pitch, frame]
@@ -76,7 +43,6 @@ def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.
 
     return note_events
 
-
 def note_events_to_piano_roll(note_events, n_bins, n_frames):
     piano_roll = torch.zeros((n_bins, n_frames), dtype=torch.float32)
     for note_event in note_events:
@@ -95,19 +61,16 @@ def predict(model, inputs):
       # Añadir dimension de batch
       cqt=torch.unsqueeze(cqt, 0)
 
-      output_notes, output_onsets = model(cqt)
+      output_notes = model(cqt)
       # Eliminar la dimensión de los canales y de batch
       output_notes=torch.squeeze(output_notes)
-      output_onsets=torch.squeeze(output_onsets)
 
       # Aplicar sigmoide para obtener predicción binaria
       output_notes=torch.sigmoid(output_notes)
-      output_onsets=torch.sigmoid(output_onsets)
 
       visualize_piano_roll(output_notes, name='output_notes.png')
-      visualize_piano_roll(output_onsets, name='output_onsets.png')
 
-      note_events=post_process_outputs(output_notes, output_onsets)
+      note_events=post_process_outputs(output_notes)
 
       predicted_pianoroll=note_events_to_piano_roll(note_events, output_notes.shape[0], output_notes.shape[1])
   return predicted_pianoroll
