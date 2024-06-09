@@ -86,19 +86,17 @@ document.getElementById("upload-form").addEventListener("submit", function() {
   convertButton.disabled = true;
 });
 // Solo se ejecutará cuando el usuario haya hecho la conversión
-document.addEventListener("DOMContentLoaded", function() {
-    var tempoInput = document.getElementById("tempo");
-    var tempoValueSpan = document.getElementById("tempo-value");
-    if (tempoInput && tempoValueSpan) {
-      tempoInput.addEventListener("input", function() {
-        tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0;
-        });
-        }
-    var modifyForm= document.getElementById("modify-form");
-    if (modifyForm) {
-      modifyForm.addEventListener("submit", function() {
-        document.getElementById("loader-modify").style.display = "block";
-        document.getElementById("modify_button").disabled = true;
-      });
+var tempoInput = document.getElementById("tempo");
+var tempoValueSpan = document.getElementById("tempo-value");
+if (tempoInput && tempoValueSpan) {
+  tempoInput.addEventListener("input", function() {
+    tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0;
+    });
     }
-});
+var modifyForm= document.getElementById("modify-form");
+if (modifyForm) {
+  modifyForm.addEventListener("submit", function() {
+    document.getElementById("loader-modify").style.display = "block";
+    document.getElementById("modify_button").disabled = true;
+  });
+}

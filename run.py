@@ -1,5 +1,5 @@
 import time
-from flask import Flask, render_template, request, send_file
+from flask import Flask, after_this_request, render_template, request, send_file
 from predict import get_midi_from_wav
 import torch
 from model import UNet, CNN_Model
@@ -27,6 +27,16 @@ def load_model(model_name):
     model.load_state_dict(torch.load(model_path, map_location=device)["model"])
     return model
 
+def remove_outputs_folder():
+    # Eliminar todos los archivos de salida
+    for filename in os.listdir("outputs"):
+        file_path = os.path.join("outputs", filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
 # Cargar todos los modelos disponibles
 models = {
     'checkpoint_unet': load_model('checkpoint_unet'),
@@ -41,6 +51,8 @@ def index():
 def predict():
     if 'file' not in request.files:
         return "No se ha proporcionado un archivo de audio"
+
+    remove_outputs_folder()
 
     audio_file = request.files['file']
     model_name = request.form['model']
@@ -100,22 +112,12 @@ def modify_midi():
     return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 @app.route('/get_midi/<filename>')
 def get_midi(filename):
-    # Enviar el archivo MIDI al usuario para su descarga
-    response = send_file("outputs/"+filename, as_attachment=True)
-    
-    # Eliminar el archivo después de la descarga
-    #os.remove(filename)
-    
-    return response
+    filepath = f"outputs/{filename}"
+    return send_file(filepath, as_attachment=True)
 
 @app.route('/get_wav/<filename>')
 def get_wav(filename):
-    # Enviar el archivo WAV al usuario para su descarga
-    response = send_file("outputs/"+filename, as_attachment=True, mimetype="audio/wav")
-    
-    # Eliminar el archivo después de la descarga
-    #os.remove(filename)
-    
-    return response
+    filepath = f"outputs/{filename}"
+    return send_file(filepath, as_attachment=True, mimetype="audio/wav")
 if __name__ == '__main__':
     app.run(debug=True)
