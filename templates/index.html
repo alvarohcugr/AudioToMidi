@@ -26,8 +26,10 @@
                     <option value="checkpoint_unet"> UNet </option>
                 </select>
             </div>
-            
-            <input id="convert_button" class="button disabled" type="submit" value="Convertir" disabled="disabled" >
+            <div class="hflex">
+                <input id="convert_button" class="button disabled" type="submit" value="Convertir" disabled="disabled" >
+                <div class="loader" id="loader-convert"></div>
+            </div>
         </form>
     </div>
     {% if wav_url %}
@@ -45,7 +47,7 @@
     <div class="container">
         <div class="vflex">
             <h2>Editar MIDI resultante:</h2>
-            <form action="/modify_midi" class="vflex" method="post">
+            <form action="/modify_midi" id="modify-form" class="vflex" method="post">
                 <input type="hidden" name="midi_file_path" value="{{ midi_url }}">
                 <div class="flex-container">
                     <div class="vflex">
@@ -62,7 +64,10 @@
                         </select>
                     </div>
                 </div>
-                <button class="button" type="submit">Modificar MIDI</button>
+                <div class="hflex">
+                    <button class="button" type="submit" id="modify_button">Modificar MIDI</button>
+                    <div class="loader" id="loader-modify"></div>
+                </div>
             </form>          
         </div>
     </div>

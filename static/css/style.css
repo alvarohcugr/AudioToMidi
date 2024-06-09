@@ -13,6 +13,27 @@ body {
 .right {
     margin-left: auto;
 }
+.hflex{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.loader {
+    display: none;
+    width:30px;
+    height:30px;
+    border: 7px solid #ffffff; 
+    border-top: 7px solid #007bff; 
+    border-radius: 50%;
+    animation: spin 2s linear infinite;
+    margin-left: 2em;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 
 .vflex {
     display: flex;
@@ -58,9 +79,8 @@ audio {
     background-color: #007bff;
 }
 input[type="submit"] {
-    display: block;
+    display: inline-block;
     font-size: 20px;
-    margin: 0 auto;
     padding: 20px 60px;
 }
 
@@ -71,7 +91,10 @@ input[type="file"] {
 a {
     text-decoration: none;
 }
-
+#convert_button {
+    display: inline-block;
+    margin:0;
+}
 #file-name {
     display: inline-block;
     width:200px;
@@ -85,7 +108,7 @@ a {
 .flex-container {
     display: flex;
     justify-content: space-around;
-    align-items: flex-start;
+    align-items: flex;
     flex-wrap: wrap;
     row-gap: 30px;
 }
@@ -108,7 +131,6 @@ a {
     font-size: 16px;
     border-radius: 4px;
     cursor: pointer;
-    margin: auto;
 }
 
 .disabled {
