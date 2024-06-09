@@ -6,10 +6,43 @@ from constants import FRAME_DURATION, N_BINS_PER_OCTAVE, N_BINS, F_MIN, SAMPLING
 import matplotlib.pyplot as plt
 
 
-def post_process_outputs(output_notes, tolerance=4, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
+def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
+    # Tomar como candidatos peak onsets con probabilidad > 0.5
+    # Calcula la matriz de diferencias para detectar los picos
+    diff_tensor = torch.diff(output_onset, dim=1)
+
+    # Encuentra las posiciones donde la diferencia cambia de positivo a negativo
+    positive_to_negative = torch.nonzero((diff_tensor[:, :-1] > 0) & (diff_tensor[:, 1:] < 0))
+
+    # Ajusta las posiciones para considerar el desplazamiento por torch.diff
+    onset_candidates = list(zip(positive_to_negative[:, 0], positive_to_negative[:, 1] + 1))
+
+    # Filtra los candidatos según el umbral
+    onset_candidates = [(i[0].item(), i[1].item()) for i in onset_candidates if output_onset[i[0].item(), i[1].item()] >= onset_thres]
+
     # Crear eventos de notas a partir de los candidatos y las probabilidades de notas
     note_events = []
-    # Crear eventos de notas adicionales a partir de las probabilidades de notas
+    for onset in onset_candidates[::-1]:  # Iterar en orden temporal inverso
+        start_time = onset[1]
+        pitch = onset[0]
+        end_time = start_time
+        under_thres=0
+        for t in range(start_time + 1, output_notes.shape[1]):
+            if (output_notes[pitch,t]<note_thres):
+                under_thres+=1
+            else:
+                under_thres=0
+                end_time=t
+            if (under_thres>=tolerance):
+                break
+        # No tener en cuenta la nota si es muy corta
+        note_duration=(end_time+1-start_time)*FRAME_DURATION
+        if note_duration < note_duration_thres:
+            continue
+
+        output_notes[pitch, start_time:end_time + 1] = 0
+        note_events.append({"start_time":start_time, "end_time":end_time, "pitch": pitch})
+    # Crear eventos de notas adicionarles a partir de las probabilidades de notas
     for pitch in range(output_notes.shape[0]):
         for frame in range(output_notes.shape[1]):
             likelihood=output_notes[pitch, frame]
@@ -43,6 +76,42 @@ def post_process_outputs(output_notes, tolerance=4, note_thres=0.3, add_note_thr
 
     return note_events
 
+def post_process_outputs_no_onsets(output_notes, tolerance=4, note_thres=0.3, add_note_thres=0.5, note_duration_thres=0.12):
+    # Crear eventos de notas a partir de los candidatos y las probabilidades de notas
+    note_events = []
+    # Crear eventos de notas adicionales a partir de las probabilidades de notas
+    for pitch in range(output_notes.shape[0]):
+        for frame in range(output_notes.shape[1]):
+            likelihood=output_notes[pitch, frame]
+            if (likelihood > add_note_thres):
+                start_time=frame
+                end_time=frame
+                under_thres=0
+                for t in range(frame + 1, output_notes.shape[1]):
+                    if (output_notes[pitch,t]<note_thres):
+                        under_thres+=1
+                    else:
+                        under_thres=0
+                        end_time=t
+                    if (under_thres>=tolerance):
+                        break
+                under_thres=0
+                for t in range(frame - 1, 0, -1):
+                    if (output_notes[pitch,t]<note_thres):
+                        under_thres+=1
+                    else:
+                        under_thres=0
+                        start_time=t
+                    if (under_thres>=tolerance):
+                        break
+                # No tener en cuenta la nota si es muy corta
+                note_duration=(end_time+1-start_time)*FRAME_DURATION
+                output_notes[pitch, start_time:end_time + 1] = 0
+                if note_duration < note_duration_thres:
+                    continue
+                note_events.append({"start_time":start_time, "end_time":end_time, "pitch": pitch})
+    return note_events
+
 def note_events_to_piano_roll(note_events, n_bins, n_frames):
     piano_roll = torch.zeros((n_bins, n_frames), dtype=torch.float32)
     for note_event in note_events:
@@ -51,29 +120,34 @@ def note_events_to_piano_roll(note_events, n_bins, n_frames):
         pitch = note_event['pitch']
         piano_roll[pitch, start_time:end_time + 1] = 1
     return piano_roll
-def predict(model, inputs):
-  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  model.eval()
-  with torch.no_grad():
-      # Obtener espectrograma pasar como input al modelo
-      cqt= torch.tensor(inputs).to(device)
-
-      # Añadir dimension de batch
-      cqt=torch.unsqueeze(cqt, 0)
-
-      output_notes = model(cqt)
-      # Eliminar la dimensión de los canales y de batch
-      output_notes=torch.squeeze(output_notes)
-
-      # Aplicar sigmoide para obtener predicción binaria
-      output_notes=torch.sigmoid(output_notes)
-
-      visualize_piano_roll(output_notes, name='output_notes.png')
-
-      note_events=post_process_outputs(output_notes)
-
-      predicted_pianoroll=note_events_to_piano_roll(note_events, output_notes.shape[0], output_notes.shape[1])
-  return predicted_pianoroll
+def predict(model, inputs, onsets=False):
+	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	model.eval()
+	with torch.no_grad():
+		cqt = torch.tensor(inputs).to(device)
+        # Añadir dimension de batch
+		cqt=torch.unsqueeze(cqt, 0)
+		if (onsets):
+			# Obtener espectrograma pasar como input al modelo
+			output_notes, output_onsets = model(cqt)
+			# Eliminar la dimensión de los canales
+			output_notes=torch.squeeze(output_notes)
+			output_onsets=torch.squeeze(output_onsets)
+			# Aplicar sigmoide para obtener predicción binaria
+			output_notes=torch.sigmoid(output_notes)
+			output_onsets=torch.sigmoid(output_onsets)
+			# Aplicar el post-procesado a las salidas del modelo
+			note_events=post_process_outputs(output_notes, output_onsets)
+		else:
+			output_notes = model(cqt)
+			# Eliminar la dimensión de los canales
+			output_notes=torch.squeeze(output_notes)
+			# Aplicar sigmoide para obtener predicción binaria
+			output_notes=torch.sigmoid(output_notes)
+			# Aplicar el post-procesado a las salidas del modelo
+			note_events=post_process_outputs_no_onsets(output_notes)
+		predicted_pianoroll=note_events_to_piano_roll(note_events, output_notes.shape[0], output_notes.shape[1])
+	return predicted_pianoroll
 
 def pianoroll_to_midi(piano_roll, tempo=500000):
     piano_roll=piano_roll.T
@@ -126,13 +200,13 @@ def visualize_piano_roll(piano_roll, name, cmap='Blues', title='Piano-Roll'):
     plt.title(title)
     plt.savefig(name) # Guardar la imagen()
 
-def get_midi_from_wav(wav_file_path, model):
+def get_midi_from_wav(wav_file_path, model, onsets=False):
     # Obtener características
     features = get_features(wav_file_path)
     # Normalizar las características
     features = (np.log(features+10e-7) - (-6.3362346)) / 2.29297
     # Predecir
-    prediction = predict(model, features)
+    prediction = predict(model, features, onsets=onsets)
     # Convertir a formato MIDI
     midi_file = pianoroll_to_midi(prediction)
 

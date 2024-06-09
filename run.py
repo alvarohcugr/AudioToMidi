@@ -2,7 +2,7 @@ import time
 from flask import Flask, render_template, request, send_file
 from predict import get_midi_from_wav
 import torch
-from model import UNet
+from model import UNet, CNN_Model
 import os
 import subprocess
 from midi_processing import modify_midi_file
@@ -14,14 +14,24 @@ app = Flask(__name__)
 
 # Verificar si hay disponibilidad de GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# Crear la red y moverla a la GPU si está disponible
-harmonics=[0.5, 1, 2, 3, 4, 5, 6, 7]
-model=UNet(n_classes=1, harmonics=harmonics).to(device)
-model.eval()
-# Ruta con los pesos del modelo
-model_path = 'checkpoint_unet.pth'
-# Carga los pesos al modelo
-model.load_state_dict(torch.load(model_path, map_location=device)["model"])
+# Función para cargar un modelo
+def load_model(model_name):
+    harmonics = [0.5, 1, 2, 3, 4, 5, 6, 7]
+    if (model_name == 'checkpoint_unet'):
+        model = UNet(n_classes=1, harmonics=harmonics).to(device)
+        
+    elif (model_name == 'checkpoint_deep'):
+        model = CNN_Model(harmonics=harmonics).to(device)
+    model.eval()
+    model_path = f'{model_name}.pth'
+    model.load_state_dict(torch.load(model_path, map_location=device)["model"])
+    return model
+
+# Cargar todos los modelos disponibles
+models = {
+    'checkpoint_unet': load_model('checkpoint_unet'),
+    'checkpoint_deep': load_model('checkpoint_deep')
+}
 
 @app.route('/')
 def index():
@@ -33,6 +43,12 @@ def predict():
         return "No se ha proporcionado un archivo de audio"
 
     audio_file = request.files['file']
+    model_name = request.form['model']
+
+    # Obtener el modelo seleccionado
+    model = models.get(model_name)
+    if not model:
+        return "Modelo no válido seleccionado"
     
     # Generar un nombre de archivo único basado en la marca de tiempo actual
     timestamp = int(time.time())
@@ -43,7 +59,8 @@ def predict():
     midi_file_path= f"outputs/{midi_file_name}"
     wav_file_path = f"outputs/{wav_file_name}"
     # Convertir piano roll a formato MIDI
-    midi_file = get_midi_from_wav(audio_file, model)
+    onsets=model_name=='checkpoint_deep'
+    midi_file = get_midi_from_wav(audio_file, model, onsets)
 
     # Guardar el archivo MIDI en disco
     midi_file.save(midi_file_path)

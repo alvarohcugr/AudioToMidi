@@ -19,10 +19,29 @@
                 <span id="file-name" class="file-name">Ningún archivo seleccionado</span>
             </div>
             <input id="audio_file" type="file"  name="file" onchange="selectFileHandler(this)">
+            <div id="flex-container" class="right">
+                <label for="model"><strong>Modelo:</strong></label>
+                <select name="model" id="model">
+                    <option value="checkpoint_deep"> ConvNet (Recomendado)</option>
+                    <option value="checkpoint_unet"> UNet </option>
+                </select>
+            </div>
+            
             <input id="convert_button" class="button disabled" type="submit" value="Convertir" disabled="disabled" >
         </form>
     </div>
     {% if wav_url %}
+    <div class="container">
+        <div class="flex-container">
+            <h2>Reproducir Archivo MIDI resultante (sintetizado con Timidity):</h2>
+            <audio controls>
+                <source src="{{ wav_url }}" type="audio/wav">
+                Tu navegador no soporta la reproducción de archivos WAV.
+            </audio>
+            <a href="{{ wav_url }}" download class="button">Descargar WAV</a>
+            <a href="{{ midi_url }}" download class="button">Descargar MIDI</a>
+        </div>
+    </div>
     <div class="container">
         <div class="vflex">
             <h2>Editar MIDI resultante:</h2>
@@ -31,8 +50,8 @@
                 <div class="flex-container">
                     <div class="vflex">
                         <label for="tempo"><strong>Tempo:</strong></label>
-                        <input type="range" name="tempo" id="tempo" min="20" max="250" value="120" step="1">
-                        <label><span id="tempo-value">120</span> BPM</label>
+                        <input type="range" name="tempo" id="tempo" min="30" max="480" value="120" step="1">
+                        <span id="tempo-value">x1</span>
                     </div>
                     <div class="vflex">
                         <label for="instrument"><strong>Instrumento:</strong></label>
@@ -46,18 +65,6 @@
                 <button class="button" type="submit">Modificar MIDI</button>
             </form>          
         </div>
-    </div>
-    <div class="container">
-        <div class="flex-container">
-            <h2>Reproducir Archivo MIDI resultante (sintetizado con Timidity):</h2>
-            <audio controls>
-                <source src="{{ wav_url }}" type="audio/wav">
-                Tu navegador no soporta la reproducción de archivos WAV.
-            </audio>
-            <a href="{{ wav_url }}" download class="button">Descargar WAV</a>
-            <a href="{{ midi_url }}" download class="button">Descargar MIDI</a>
-        </div>
-
     </div>
     {% endif %}
     <script src="{{ url_for('static', filename='js/input.js') }}"></script>
