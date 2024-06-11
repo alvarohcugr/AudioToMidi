@@ -21,13 +21,13 @@ body {
 }
 .loader {
     display: none;
-    width:30px;
-    height:30px;
-    border: 7px solid #ffffff; 
-    border-top: 7px solid #007bff; 
+    width:1.9rem;
+    height:1.9rem;
+    border: .45rem solid #ffffff; 
+    border-top: .45rem solid #007bff; 
     border-radius: 50%;
     animation: spin 2s linear infinite;
-    margin-left: 2em;
+    margin-left: 2rem;
   }
   
   @keyframes spin {
@@ -39,9 +39,8 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    row-gap: 30px;
+    row-gap: 1.9rem;
 }
-/* vflex inside flex-container selector:*/
 .flex-container > .vflex {
     width: 40%;
 }
@@ -53,12 +52,22 @@ h2 {
 
 .container {
     display: block;
-    margin: 50px auto;
-    padding: 30px;
+    margin: 3rem auto;
+    padding: 1.9rem;
     background-color: #2A2E32;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    width: 40%;
+    border-radius: .5rem;
+    box-shadow: 0 .13rem .3rem rgba(0, 0, 0, 0.5);
+    width:40%;
+}
+
+/* Media query for devices with a width less than 480px */
+@media (max-width: 800px) {
+    .container {
+        width: 70%; /* Adjust the percentage as needed */
+    }
+    audio {
+        width: 100%;
+    }
 }
 
 .highlight {
@@ -70,18 +79,18 @@ h1 {
     color: #ffffff;
 }
 audio {
-    width: 50%;
+    width: 80%;
 }
 
 #file-label {
     display: inline;
-    margin-bottom: 10px auto;
+    margin-bottom: .6rem auto;
     background-color: #007bff;
 }
 input[type="submit"] {
     display: inline-block;
-    font-size: 20px;
-    padding: 20px 60px;
+    font-size: 1.3rem;
+    padding: 1.3rem 3.75rem;
 }
 
 input[type="file"] {
@@ -97,27 +106,27 @@ a {
 }
 #file-name {
     display: inline-block;
-    width:200px;
-    margin-left: 20px;
+    width:12.5rem;
+    margin-left: 1.3rem;
 }
 #logo {
-    width: 70px;
-    height: 70px;
-    margin-left: 20px;
+    width: 4rem;
+    height: 4rem;
+    margin-left: 1.3rem;
 }
 .flex-container {
     display: flex;
     justify-content: space-around;
     align-items: flex;
     flex-wrap: wrap;
-    row-gap: 30px;
+    row-gap: 1.9rem;
 }
 #drop_zone {
     display: block;
-    border: 2px dashed #ccc;
-    border-radius: 5px;
-    padding: 20px;
-    font-size: 25px;
+    border: .13rem dashed #ccc;
+    border-radius: .3rem;
+    padding: 1.3rem;
+    font-size: 1.6rem;
     text-align: center;
     cursor: pointer;
     color: #ccc;
@@ -127,9 +136,9 @@ a {
     display: inline-block;
     color: #fff;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 4px;
+    padding: .6rem 1.3rem;
+    font-size: 1rem;
+    border-radius: .3rem;
     cursor: pointer;
 }
 
@@ -143,10 +152,10 @@ a {
 }
 select {
     font-family: Arial, sans-serif;
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    font-size: 1rem;
+    padding: .6rem;
+    border-radius: .3rem;
+    border: .06rem solid #ccc;
     background-color: #fff;
     color: #333;
     width: 100%;
@@ -156,36 +165,36 @@ select {
 select:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 0 .13rem rgba(0, 123, 255, 0.5);
 }
 
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
-    height: 15px;
+    height: .94rem;
     background: #f0f8ff; /* Fondo azul claro */
     outline: none;
-    border-radius: 10px;
+    border-radius: .6rem;
 }
 
 /* Barra de progreso */
 input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 15px;
+    height: .94rem;
     cursor: pointer;
     background: #007bff; /* Barra de progreso azul */
-    border-radius: 10px;
+    border-radius: .6rem;
 }
 
 /* Control deslizante */
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 25px;
-    height: 25px;
+    width: 1.6rem;
+    height: 1.6rem;
     cursor: pointer;
-    background: #0056b3; /* Color de control deslizante azul oscuro */
+    background: #0056b3; 
     border-radius: 50%;
-    margin-top: -5px; /* Alinear con la barra de progreso */
+    margin-top: -.3rem; 
 }
 
 /* Estilo cuando el rango está enfocado */
@@ -199,18 +208,18 @@ input[type="range"]:active::-webkit-slider-thumb {
 }
 input[type="range"]::-moz-range-track {
     width: 100%;
-    height: 15px;
+    height: .94rem;
     cursor: pointer;
     background: #ffffff; 
-    border-radius: 10px;
+    border-radius: .6rem;
 }
 input[type="range"]::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
+    width: 1.6rem;
+    height: 1.6rem;
     cursor: pointer;
     background: #007bff; 
     border-radius: 50%;
-    margin-top: -5px; 
+    margin-top: -.3rem; 
 }
 input[type="range"]:active::-moz-range-thumb {
     background: #0058b5;
