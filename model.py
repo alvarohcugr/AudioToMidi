@@ -39,8 +39,6 @@ class UNet(nn.Module):
         self.up4 = Up(128, 64)
         self.outc = OutConv(64, n_classes, stride=(3,1))
 
-        self.outc_o = OutConv(64, n_classes, stride=(3,1))
-
     def forward(self, x):
         xh=self.hs(x)
         x1 = self.inc(xh)
@@ -60,8 +58,10 @@ class DoubleConv(nn.Module):
         super(DoubleConv, self).__init__()
         self.double_conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
 

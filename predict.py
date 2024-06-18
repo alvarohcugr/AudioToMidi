@@ -6,7 +6,7 @@ from constants import FRAME_DURATION, N_BINS_PER_OCTAVE, N_BINS, F_MIN, SAMPLING
 import matplotlib.pyplot as plt
 
 
-def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5):
+def post_process_outputs(output_notes, output_onset, tolerance=2, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5):
     # Tomar como candidatos peak onsets con probabilidad > 0.5
     # Calcula la matriz de diferencias para detectar los picos
     diff_tensor = torch.diff(output_onset, dim=1)
@@ -72,7 +72,7 @@ def post_process_outputs(output_notes, output_onset, tolerance=4, onset_thres=0.
 
     return note_events
 
-def post_process_outputs_no_onsets(output_notes, tolerance=4, note_thres=0.3, add_note_thres=0.5):
+def post_process_outputs_no_onsets(output_notes, tolerance=2, note_thres=0.3, add_note_thres=0.5):
     # Crear eventos de notas a partir de los candidatos y las probabilidades de notas
     note_events = []
     # Crear eventos de notas adicionales a partir de las probabilidades de notas
@@ -131,8 +131,8 @@ def predict(model, inputs, onsets=False):
             output_notes=torch.sigmoid(output_notes)
             output_onsets=torch.sigmoid(output_onsets)
             # Visualizar la predicción
-            visualize_piano_roll(output_notes[:, :1500], 'output_notes.png')
-            visualize_piano_roll(output_onsets[:, :1500], 'output_onsets.png')
+            visualize_piano_roll(output_notes[:, :1500], 'outputs/output_notes.png')
+            visualize_piano_roll(output_onsets[:, :1500], 'outputs/output_onsets.png')
             # Aplicar el post-procesado a las salidas del modelo
             note_events=post_process_outputs(output_notes, output_onsets)
         else:
@@ -204,7 +204,7 @@ def get_midi_from_wav(wav_file_path, model, onsets=False):
     features = (np.log(features+10e-7) - (-6.3362346)) / 2.29297
     # Predecir
     prediction = predict(model, features, onsets=onsets)
-    visualize_piano_roll(prediction[:,:1500], 'prediction.png')
+    visualize_piano_roll(prediction[:,:1500], 'outputs/prediction.png')
     # Convertir a formato MIDI
     midi_file = pianoroll_to_midi(prediction)
 

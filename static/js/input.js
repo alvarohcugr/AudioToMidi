@@ -4,12 +4,12 @@ function selectFileHandler(input) {
     
 
     if (input.files.length > 0) {
-        if (input.files[0].name.endsWith('.wav')) {
+        if (input.files[0].name.endsWith('.wav') || input.files[0].name.endsWith('.mp3')) {
             fileNameSpan.textContent = input.files[0].name;
             convertButton.disabled = false;
             convertButton.classList.remove("disabled");
         }else{
-            alert('Por favor, sube un archivo de tipo .wav.')
+            alert('Por favor, sube un archivo de tipo .wav o .mp3.')
         }
     } else {
         fileNameSpan.textContent = "Ningún archivo seleccionado";
@@ -36,7 +36,7 @@ function dropHandler(event) {
 
   if (file) {
     // Verificar si el archivo es de tipo .wav
-    if (file.name.endsWith('.wav')) {
+    if (file.name.endsWith('.wav') || input.files[0].name.endsWith('.mp3')) {
         convertButton.disabled = false;
         convertButton.classList.remove('disabled');
         var input = document.getElementById('audio_file');
@@ -51,7 +51,7 @@ function dropHandler(event) {
         convertButton.disabled = true;
         convertButton.classList.add('disabled');
         console.log(file.type);
-        alert('Por favor, sube un archivo de tipo .wav.');
+        alert('Por favor, sube un archivo de tipo .wav o .mp3.');
     }
   }
   event.currentTarget.classList.remove('highlight');
