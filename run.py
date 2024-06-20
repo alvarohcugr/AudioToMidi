@@ -6,6 +6,37 @@ from model import UNet, CNN_Model
 import os
 import subprocess
 from midi_processing import modify_midi_file
+import tempfile
+from memory_profiler import memory_usage
+import psutil
+import time
+
+def profile_memory(func):
+    def wrapper(*args, **kwargs):
+        # Obtener el uso de memoria inicial
+        process = psutil.Process()
+        mem_before = process.memory_info().rss / 1024 / 1024  # Convertir a MB
+        
+        # Medir el tiempo de ejecución
+        start_time = time.time()
+        
+        # Ejecutar la función y medir el uso de memoria
+        mem_usage = memory_usage((func, args, kwargs), interval=0.1)
+        result = func(*args, **kwargs)
+        
+        # Obtener el uso de memoria final
+        mem_after = process.memory_info().rss / 1024 / 1024  # Convertir a MB
+        
+        end_time = time.time()
+
+        print(f"Memoria inicial: {mem_before:.2f} MB")
+        print(f"Memoria final: {mem_after:.2f} MB")
+        print(f"Memoria máxima usada: {max(mem_usage):.2f} MB")
+        print(f"Tiempo de ejecución: {end_time - start_time:.2f} segundos")
+        
+        return result
+    return wrapper
+
 def midi_to_wav(midi_path, wav_path):
     # Usar timidity para convertir MIDI a WAV
     subprocess.run(["timidity", midi_path, "-Ow", "-o", wav_path])
@@ -57,22 +88,33 @@ def predict():
     audio_file = request.files['file']
     model_name = request.form['model']
 
+    print("Transcribiendo el archivo:", audio_file.filename)
     # Obtener el modelo seleccionado
     model = models.get(model_name)
     if not model:
         return "Modelo no válido seleccionado"
-    
-    # Generar un nombre de archivo único basado en la marca de tiempo actual
+
     timestamp = int(time.time())
     midi_file_name = f'output_{timestamp}.mid'
     wav_file_name = f'output_{timestamp}.wav'
-    
-    # Guardar el archivo en disco
-    midi_file_path= f"outputs/{midi_file_name}"
+    midi_file_path = f"outputs/{midi_file_name}"
     wav_file_path = f"outputs/{wav_file_name}"
+
+    # Guardar el archivo de audio en una ubicación temporal
+    temp_fd, temp_path = tempfile.mkstemp(suffix=".wav")
+    with os.fdopen(temp_fd, 'wb') as temp_file:
+        audio_file.save(temp_file)
+
     # Convertir piano roll a formato MIDI
-    onsets=model_name=='checkpoint_deep'
-    midi_file = get_midi_from_wav(audio_file, model, onsets)
+    onsets = model_name == 'checkpoint_deep'
+    
+    # Decorar la función para medir memoria
+    @profile_memory
+    def transcribe_audio(temp_path, model, onsets):
+        midi_file = get_midi_from_wav(temp_path, model, onsets)
+        return midi_file
+
+    midi_file = transcribe_audio(temp_path, model, onsets)
 
     # Guardar el archivo MIDI en disco
     midi_file.save(midi_file_path)
@@ -80,7 +122,9 @@ def predict():
     # Convertir MIDI a WAV
     midi_to_wav(midi_file_path, wav_file_path)
 
-    # Devolver las URLs de los archivos MIDI y WAV al usuario
+    # Eliminar el archivo temporal
+    os.remove(temp_path)
+
     midi_url = f"/get_midi/{midi_file_name}"
     wav_url = f"/get_wav/{wav_file_name}"
 

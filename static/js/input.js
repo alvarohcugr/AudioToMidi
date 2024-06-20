@@ -1,8 +1,6 @@
 const fileNameSpan = document.getElementById("file-name");
 const convertButton = document.getElementById("convert_button");
 function selectFileHandler(input) {
-    
-
     if (input.files.length > 0) {
         if (input.files[0].name.endsWith('.wav') || input.files[0].name.endsWith('.mp3')) {
             fileNameSpan.textContent = input.files[0].name;
@@ -90,9 +88,9 @@ var tempoInput = document.getElementById("tempo");
 var tempoValueSpan = document.getElementById("tempo-value");
 if (tempoInput && tempoValueSpan) {
   tempoInput.addEventListener("input", function() {
-    tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0;
-    });
-    }
+  tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0;
+  });
+}
 var modifyForm= document.getElementById("modify-form");
 if (modifyForm) {
   modifyForm.addEventListener("submit", function() {
