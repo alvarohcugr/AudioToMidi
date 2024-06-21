@@ -91,8 +91,9 @@ document.getElementById("upload-form").addEventListener("submit", function() {
 var tempoInput = document.getElementById("tempo");
 var tempoValueSpan = document.getElementById("tempo-value");
 if (tempoInput && tempoValueSpan) {
+  tempoValueSpan.textContent = "x" + Math.round(tempoInput.value / 120.0 * 100.0) / 100.0 + "\t(" + tempoInput.value + " MIDI BPM)";
   tempoInput.addEventListener("input", function() {
-  tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0;
+  tempoValueSpan.textContent = "x" + Math.round(this.value / 120.0 * 100.0) / 100.0 + "\t(" + tempoInput.value + " MIDI BPM)";
   });
 }
 var modifyForm= document.getElementById("modify-form");

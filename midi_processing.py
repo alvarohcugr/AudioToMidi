@@ -20,8 +20,4 @@ def modify_midi_file(midi_path, bpm, instrument):
         if msg.type != 'set_tempo' and msg.type != 'program_change':
             # Copiar otros mensajes MIDI
             output_track.append(msg)
-
-    # Guardar el archivo MIDI modificado
-    output_midi.save(midi_path)
-
-    return midi_path
+    return output_midi

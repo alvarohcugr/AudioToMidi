@@ -98,8 +98,8 @@ def predict(model, inputs, onsets=False):
             output_notes=torch.sigmoid(output_notes)
             output_onsets=torch.sigmoid(output_onsets)
             # Visualizar la predicción
-            visualize_piano_roll(output_notes[:, :1500], 'outputs/output_notes.png')
-            visualize_piano_roll(output_onsets[:, :1500], 'outputs/output_onsets.png')
+            """ visualize_piano_roll(output_notes[:, :1500], 'outputs/output_notes.png')
+            visualize_piano_roll(output_onsets[:, :1500], 'outputs/output_onsets.png') """
             # Aplicar el post-procesado a las salidas del modelo
             note_events=post_process_outputs(output_notes, output_onsets)
         else:
@@ -169,7 +169,7 @@ def get_midi_from_wav(wav_file_path, model, onsets=False):
     features = (np.log(features+10e-7) - (-6.3362346)) / 2.29297
     # Predecir
     prediction = predict(model, features, onsets=onsets)
-    visualize_piano_roll(prediction[:,:1500], 'outputs/prediction.png')
+    #visualize_piano_roll(prediction[:,:1500], 'outputs/prediction.png')
     # Convertir a formato MIDI
     midi_file = pianoroll_to_midi(prediction)
 

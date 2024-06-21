@@ -1,5 +1,5 @@
 import time
-from flask import Flask, after_this_request, render_template, request, send_file
+from flask import Flask, render_template, request, send_file
 from predict import get_midi_from_wav
 import torch
 from model import UNet, CNN_Model
@@ -9,7 +9,6 @@ from midi_processing import modify_midi_file
 import tempfile
 from memory_profiler import memory_usage
 import psutil
-import time
 
 app = Flask(__name__)
 
@@ -99,7 +98,7 @@ def predict():
     midi_file_path = f"outputs/{midi_file_name}"
     wav_file_path = f"outputs/{wav_file_name}"
 
-    # Guardar el archivo de audio en una ubicación temporal
+    # Guardar el archivo de audio en una ubicación temporal (requerido para el perfilado de memoria)
     temp_fd, temp_path = tempfile.mkstemp(suffix=".wav")
     with os.fdopen(temp_fd, 'wb') as temp_file:
         audio_file.save(temp_file)
@@ -142,12 +141,16 @@ def modify_midi():
     midi_path = "outputs/"+midi_filename
     wav_path = "outputs/"+wav_filename
     # Modificar el archivo MIDI con el tempo e instrumento seleccionados
-    modify_midi_file(midi_path, tempo, instrument)
-    midi_to_wav(midi_path, wav_path)
+    output_midi =modify_midi_file(midi_path, tempo, instrument)
+
     # Cambiar nombres de los archivos MIDI y WAV
     timestamp = int(time.time())
-    os.rename(midi_path, f"outputs/output{timestamp}.mid")
-    os.rename(wav_path, f"outputs/output{timestamp}.wav")
+    midi_path=f"outputs/output{timestamp}.mid"
+    wav_path=f"outputs/output{timestamp}.wav"
+    # Guardar el archivo MIDI modificado
+    output_midi.save(midi_path)
+    midi_to_wav(midi_path, wav_path)
+
     # Devolver las URLs de los archivos MIDI y WAV al usuario
     wav_url = f"/get_wav/output{timestamp}.wav"
     midi_url = f"/get_midi/output{timestamp}.mid"
@@ -163,4 +166,5 @@ def get_wav(filename):
     filepath = f"outputs/{filename}"
     return send_file(filepath, as_attachment=True, mimetype="audio/wav")
 if __name__ == '__main__':
-    app.run(debug=True)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=8080)
