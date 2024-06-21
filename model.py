@@ -137,9 +137,6 @@ class CNN_Note(nn.Module):
         self.bn3 = nn.BatchNorm2d(8)
         self.relu3 = nn.ReLU()
         self.conv4 = nn.Conv2d(in_channels=8, out_channels=1, kernel_size=3, padding=(1, 1))
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                init.xavier_uniform_(m.weight)
 
     def forward(self, x):
         x = x.to(self.conv1.weight.dtype)  # Convertir x al mismo tipo de datos que self.fc1.weight
@@ -166,10 +163,6 @@ class CNN_Onset(nn.Module):
         self.bn2 = nn.BatchNorm2d(32)
         self.relu2 = nn.ReLU()
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=1, kernel_size=(3, 3), padding=(1, 1))
-        # Inicialización de pesos Xavier
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                init.xavier_uniform_(m.weight)
 
     def forward(self, x, n):
         x = x.to(self.conv1.weight.dtype)  # Convertir x al mismo tipo de datos que self.fc1.weight

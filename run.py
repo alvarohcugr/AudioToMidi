@@ -11,6 +11,10 @@ from memory_profiler import memory_usage
 import psutil
 import time
 
+app = Flask(__name__)
+
+# Verificar si hay disponibilidad de GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def profile_memory(func):
     def wrapper(*args, **kwargs):
         # Obtener el uso de memoria inicial
@@ -40,11 +44,6 @@ def profile_memory(func):
 def midi_to_wav(midi_path, wav_path):
     # Usar timidity para convertir MIDI a WAV
     subprocess.run(["timidity", midi_path, "-Ow", "-o", wav_path])
-
-app = Flask(__name__)
-
-# Verificar si hay disponibilidad de GPU
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Función para cargar un modelo
 def load_model(model_name):
     harmonics = [0.5, 1, 2, 3, 4, 5, 6, 7]
