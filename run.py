@@ -54,20 +54,20 @@ def load_model(model_name):
     Carga un modelo preentrenado de acuerdo al nombre especificado.
 
     Args:
-        model_name (str): Nombre del modelo a cargar ('checkpoint_unet' o 'checkpoint_deep').
+        model_name (str): Nombre del modelo a cargar ('model_uneth' o 'model_bp2').
 
     Returns:
         torch.nn.Module: Modelo cargado en el dispositivo (CPU o GPU).
     """
     harmonics = [0.5, 1, 2, 3, 4, 5, 6, 7]
-    if (model_name == 'checkpoint_unet'):
+    if (model_name == 'model_uneth'):
         model = UNet(n_classes=1, harmonics=harmonics).to(device)
         
-    elif (model_name == 'checkpoint_deep'):
+    elif (model_name == 'model_bp2'):
         model = CNN_Model(harmonics=harmonics).to(device)
     model.eval()
     model_path = f'{model_name}.pth'
-    model.load_state_dict(torch.load(model_path, map_location=device)["model"])
+    model.load_state_dict(torch.load(model_path, map_location=device))
     return model
 
 def remove_outputs_folder():
@@ -90,8 +90,8 @@ def remove_outputs_folder():
 
 # Cargar todos los modelos disponibles
 models = {
-    'checkpoint_unet': load_model('checkpoint_unet'),
-    'checkpoint_deep': load_model('checkpoint_deep')
+    'model_uneth': load_model('model_uneth'),
+    'model_bp2': load_model('model_bp2')
 }
 
 @app.route('/')
@@ -138,7 +138,7 @@ def predict():
         audio_file.save(temp_file)
 
     # Convertir piano roll a formato MIDI
-    onsets = model_name == 'checkpoint_deep'
+    onsets = model_name == 'model_bp2'
     
     # Decorar la función para medir memoria
     @profile_memory

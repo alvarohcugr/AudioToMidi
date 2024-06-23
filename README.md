@@ -1,5 +1,5 @@
 # AudioToMidi
-AudioToMidi es una aplicación de Transcripción Automática de la Música que permite introducir ficheros de audio y obtener a cambio un archivo .MIDI con el resultado de la transcripción. Nota: La aplicación está pensada la transcripción de archivos de audio de piano. El uso de archivos de audio con otro tipo de instrumentos puede dar lugar a una menor calidad en la transcripción.
+AudioToMidi es una aplicación de Transcripción Automática de la Música que permite introducir ficheros de audio y obtener a cambio un archivo .MIDI con el resultado de la transcripción, utilizando modelos de aprendizaje automático. Nota: La aplicación está pensada la transcripción de archivos de audio de piano. El uso de archivos de audio con otro tipo de instrumentos puede dar lugar a una menor calidad en la transcripción.
 
 Esta aplicación ha sido creada por Álvaro Hernández Coronel para el Trabajo de Fin de Grado del grado de Ingeniería Informática en la Escuela Técnica Superior de Ingeniería Informática y Telecomunicaciones (UGR). El TFG ha sido tutorizado por Miguel García Silvente y Eugenio Aguirre Molina.
 
@@ -10,6 +10,15 @@ Puedes verificar la instalación con:
 python --version 
 pip --version
 ```
+### Opcional: Entorno virtual
+Si quieres un entorno aislado para las dependencias de python, puedes crear un entorno virtual con Virtualenv.
+Instala y activa el entorno:
+```bash
+pip install virtualenv
+virtualenv myenv
+source myenv/bin/activate
+```
+Ahora tus dependencias se instalarán en el entorno virtual. Puedes salir del entorno virtual con el comando `deactivate`
 ### Paso 2: Instalar dependencias    
 Ejecuta el script `install.sh`
 
@@ -23,7 +32,7 @@ Esto iniciará la aplicación Flask y estará accesible en `http://localhost:808
 ### Paso 1: Construir la imagen Docker
 
 Asegúrate de tener Docker instalado en tu máquina. Desde la terminal, navega hasta el directorio donde se encuentra tu Dockerfile y ejecuta el siguiente comando para construir la imagen Docker:
-`docker build -t nombre_de_tu_imagen` .
+`docker build -t nombre_de_tu_imagen .`
 
 
 Sustituye `nombre_de_tu_imagen` por el nombre que deseas darle a tu imagen Docker.
