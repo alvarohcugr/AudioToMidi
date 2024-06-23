@@ -4,9 +4,24 @@ import numpy as np
 import librosa
 from constants import FRAME_DURATION, N_BINS_PER_OCTAVE, N_BINS, F_MIN, SAMPLING_RATE, HOP_LENGTH
 import matplotlib.pyplot as plt
+from midi_processing import pianoroll_to_midi
 
 
 def post_process_outputs(output_notes, output_onsets=None, tolerance=2, onset_thres=0.5, note_thres=0.3, add_note_thres=0.5):
+    """
+    Procesa las salidas del modelo para generar eventos de notas basados en umbrales de probabilidad.
+
+    Args:
+        output_notes (torch.Tensor): Tensor con las probabilidades de notas predichas.
+        output_onsets (torch.Tensor, opcional): Tensor con las probabilidades de onsets predichas.
+        tolerance (int, opcional): Tolerancia de duración mínima de una nota.
+        onset_thres (float, opcional): Umbral de probabilidad para onsets.
+        note_thres (float, opcional): Umbral de probabilidad para fin de notas.
+        add_note_thres (float, opcional): Umbral de probabilidad adicional para notas.
+
+    Returns:
+        list: Lista de eventos de notas con tiempos de inicio, fin y tono.
+    """
     note_events = []
     if (output_onsets != None):
         # Tomar como candidatos peak onsets con probabilidad > 0.5
@@ -74,6 +89,17 @@ def post_process_outputs(output_notes, output_onsets=None, tolerance=2, onset_th
     return note_events
 
 def note_events_to_piano_roll(note_events, n_bins, n_frames):
+    """
+    Convierte eventos de notas en un piano roll (matriz binaria).
+
+    Args:
+        note_events (list): Lista de eventos de notas con inicio, fin y tono.
+        n_bins (int): Número de bins (notas) en el piano roll.
+        n_frames (int): Número de frames (frames) en el piano roll.
+
+    Returns:
+        torch.Tensor: Piano roll como tensor binario.
+    """
     piano_roll = torch.zeros((n_bins, n_frames), dtype=torch.float32)
     for note_event in note_events:
         start_time = note_event['start_time']
@@ -82,6 +108,17 @@ def note_events_to_piano_roll(note_events, n_bins, n_frames):
         piano_roll[pitch, start_time:end_time + 1] = 1
     return piano_roll
 def predict(model, inputs, onsets=False):
+    """
+    Realiza una predicción utilizando las salidas de notas y, opcionalmente, onsets.
+
+    Args:
+        model (torch.nn.Module): Modelo de red neuronal.
+        inputs (torch.Tensor): Tensor de entrada para la predicción.
+        onsets (bool, opcional): Indica si el modelo produce predicciones de onsets.
+
+    Returns:
+        torch.Tensor: Piano roll predicho como tensor binario.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
     with torch.no_grad():
@@ -97,9 +134,6 @@ def predict(model, inputs, onsets=False):
             # Aplicar sigmoide para obtener predicción binaria
             output_notes=torch.sigmoid(output_notes)
             output_onsets=torch.sigmoid(output_onsets)
-            # Visualizar la predicción
-            """ visualize_piano_roll(output_notes[:, :1500], 'outputs/output_notes.png')
-            visualize_piano_roll(output_onsets[:, :1500], 'outputs/output_onsets.png') """
             # Aplicar el post-procesado a las salidas del modelo
             note_events=post_process_outputs(output_notes, output_onsets)
         else:
@@ -110,50 +144,52 @@ def predict(model, inputs, onsets=False):
             output_notes=torch.sigmoid(output_notes)
             # Aplicar el post-procesado a las salidas del modelo
             note_events=post_process_outputs(output_notes)
+        # Obtener la predicción en forma de piano roll
         predicted_pianoroll=note_events_to_piano_roll(note_events, output_notes.shape[0], output_notes.shape[1])
     return predicted_pianoroll
 
-def pianoroll_to_midi(piano_roll, tempo=500000):
-    piano_roll=piano_roll.T
-    bpm=60_000_000/tempo
-    TICK_DURATION=60/(bpm*480)
-    # Crear archivo midi 
-    mid_new = mido.MidiFile()
-    track = mido.MidiTrack()
-    mid_new.tracks.append(track)
-    track.append(mido.MetaMessage('set_tempo', tempo=tempo, time=0))
-    track.append(mido.Message('program_change', program=0))  # Cambio de programa (instrumento)
-
-    last_frame=piano_roll[0]
-    last_time=0
-    # Añadir los mensajes del primer frame
-    for i_note in range(0, last_frame.shape[0]):
-      if (piano_roll[0][i_note]):
-        track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=0))
-    # Añadir los mensajes del resto de frames
-    for i_frame in range(1, piano_roll.shape[0]):
-      for i_note in range(0, last_frame.shape[0]):
-        if (last_frame[i_note] and not piano_roll[i_frame][i_note]):
-          tick_time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
-          track.append(mido.Message('note_off', note=i_note + 21, velocity=0, time=tick_time))
-          last_time=i_frame
-        elif (not last_frame[i_note] and piano_roll[i_frame][i_note]):
-          tick_time=int((i_frame-last_time)*FRAME_DURATION/TICK_DURATION+1)
-          track.append(mido.Message('note_on', note=i_note + 21, velocity=100, time=tick_time))
-          last_time=i_frame
-      last_frame=piano_roll[i_frame]
-    return mid_new
-
 def get_wav(path, sr=SAMPLING_RATE):
-  # Cargar el archivo .wav y obtener la señal y la tasa de muestreo
-  return librosa.load(path, sr=sr)
+    """
+        Carga un archivo WAV y devuelve la señal de audio y la tasa de muestreo.
 
+        Args:
+            path (str): Ruta al archivo WAV.
+            sr (float, opcional): Tasa de muestreo deseada.
+
+        Returns:
+            np.ndarray, float: Señal de audio y tasa de muestreo.
+        """
+    # Cargar el archivo .wav y obtener la señal y la tasa de muestreo
+    return librosa.load(path, sr=sr)
 def get_cqt(y, sr):
+
+    """
+        Calcula el Constant-Q Transform (CQT) de una señal de audio.
+
+        Args:
+            y (np.ndarray): Señal de audio.
+            sr (float): Tasa de muestreo de la señal de audio.
+
+        Returns:
+            np.ndarray: CQT calculado como matriz de magnitudes.
+        """
   # Calcular el Constant-Q Transform (CQT)
-  cqt = np.abs(librosa.cqt(y, sr=sr, bins_per_octave=N_BINS_PER_OCTAVE, n_bins=N_BINS, fmin=F_MIN, hop_length=HOP_LENGTH))
-  return cqt
+    cqt = np.abs(librosa.cqt(y, sr=sr, bins_per_octave=N_BINS_PER_OCTAVE, n_bins=N_BINS, fmin=F_MIN, hop_length=HOP_LENGTH))
+    return cqt
 
 def visualize_piano_roll(piano_roll, name, cmap='Blues', title='Piano-Roll'):
+    """
+    Visualiza un piano roll como imagen y la guarda en un archivo.
+
+    Args:
+        piano_roll (torch.Tensor): Piano roll como tensor binario.
+        name (str): Nombre del archivo de imagen a guardar.
+        cmap (str, opcional): Mapa de colores para la visualización.
+        title (str, opcional): Título de la imagen.
+
+    Returns:
+        None
+    """
     plt.figure(figsize=(16, 4))
     plt.imshow(piano_roll, aspect='auto', cmap=cmap, vmin=0, vmax=1, origin='lower', extent=[0,piano_roll.shape[1], 0,  piano_roll.shape[0]], interpolation="none")
     plt.xlabel('Tiempo')
@@ -162,6 +198,17 @@ def visualize_piano_roll(piano_roll, name, cmap='Blues', title='Piano-Roll'):
     plt.savefig(name) # Guardar la imagen()
 
 def get_midi_from_wav(wav_file_path, model, onsets=False):
+    """
+    Convierte un archivo WAV en un archivo MIDI utilizando un modelo de red neuronal.
+
+    Args:
+        wav_file_path (str): Ruta al archivo WAV.
+        model (torch.nn.Module): Modelo de red neuronal entrenado.
+        onsets (bool, opcional): Indica si el modelo predice los onsets.
+
+    Returns:
+        mido.MidiFile: Archivo MIDI generado.
+    """
     y,sr=get_wav(wav_file_path)
     # Obtener características
     features = get_cqt(y, sr)
@@ -169,7 +216,6 @@ def get_midi_from_wav(wav_file_path, model, onsets=False):
     features = (np.log(features+10e-7) - (-6.3362346)) / 2.29297
     # Predecir
     prediction = predict(model, features, onsets=onsets)
-    #visualize_piano_roll(prediction[:,:1500], 'outputs/prediction.png')
     # Convertir a formato MIDI
     midi_file = pianoroll_to_midi(prediction)
 

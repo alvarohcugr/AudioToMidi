@@ -4,8 +4,7 @@ from predict import get_midi_from_wav
 import torch
 from model import UNet, CNN_Model
 import os
-import subprocess
-from midi_processing import modify_midi_file
+from midi_processing import modify_midi_file, midi_to_wav
 import tempfile
 from memory_profiler import memory_usage
 import psutil
@@ -15,6 +14,15 @@ app = Flask(__name__)
 # Verificar si hay disponibilidad de GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def profile_memory(func):
+    """
+    Decorador para medir el uso de memoria y el tiempo de ejecución de una función.
+
+    Args:
+        func (callable): Función a decorar.
+
+    Returns:
+        callable: Función decorada.
+    """
     def wrapper(*args, **kwargs):
         # Obtener el uso de memoria inicial
         process = psutil.Process()
@@ -40,11 +48,17 @@ def profile_memory(func):
         return result
     return wrapper
 
-def midi_to_wav(midi_path, wav_path):
-    # Usar timidity para convertir MIDI a WAV
-    subprocess.run(["timidity", midi_path, "-Ow", "-o", wav_path])
 # Función para cargar un modelo
 def load_model(model_name):
+    """
+    Carga un modelo preentrenado de acuerdo al nombre especificado.
+
+    Args:
+        model_name (str): Nombre del modelo a cargar ('checkpoint_unet' o 'checkpoint_deep').
+
+    Returns:
+        torch.nn.Module: Modelo cargado en el dispositivo (CPU o GPU).
+    """
     harmonics = [0.5, 1, 2, 3, 4, 5, 6, 7]
     if (model_name == 'checkpoint_unet'):
         model = UNet(n_classes=1, harmonics=harmonics).to(device)
@@ -57,6 +71,12 @@ def load_model(model_name):
     return model
 
 def remove_outputs_folder():
+    """
+    Elimina todos los archivos en el directorio 'outputs'.
+
+    Returns:
+        None
+    """
     # Eliminar todos los archivos de salida
     for filename in os.listdir("outputs"):
         file_path = os.path.join("outputs", filename)
@@ -66,6 +86,8 @@ def remove_outputs_folder():
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
 
+
+
 # Cargar todos los modelos disponibles
 models = {
     'checkpoint_unet': load_model('checkpoint_unet'),
@@ -74,10 +96,22 @@ models = {
 
 @app.route('/')
 def index():
+    """
+    Renderiza la plantilla index.html en la ruta raíz.
+
+    Returns:
+        str: Contenido HTML de la plantilla renderizada.
+    """
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Procesa la solicitud POST para transcribir un archivo de audio a MIDI y WAV.
+
+    Returns:
+        str: Contenido HTML de la plantilla index.html con URLs para descargar los archivos WAV y MIDI.
+    """
     if 'file' not in request.files:
         return "No se ha proporcionado un archivo de audio"
 
@@ -109,6 +143,17 @@ def predict():
     # Decorar la función para medir memoria
     @profile_memory
     def transcribe_audio(temp_path, model, onsets):
+        """
+        Función interna para transcribir un archivo de audio a MIDI.
+
+        Args:
+            temp_path (str): Ruta al archivo de audio temporal en formato WAV.
+            model (torch.nn.Module): Modelo de red neuronal utilizado para la transcripción.
+            onsets (bool): Indica si el modelo predice onsets o no.
+
+        Returns:
+            mido.MidiFile: Archivo MIDI generado.
+        """
         midi_file = get_midi_from_wav(temp_path, model, onsets)
         return midi_file
 
@@ -130,6 +175,13 @@ def predict():
 
 @app.route('/modify_midi', methods=['POST'])
 def modify_midi():
+    """
+    Procesa la solicitud POST para modificar un archivo MIDI con tempo e instrumento seleccionados.
+
+    Returns:
+        str: Contenido HTML de la plantilla index.html con URLs para descargar los archivos WAV y MIDI modificados.
+    """
+
      # Obtener el camino del archivo MIDI a modificar desde la solicitud del formulario
     midi_url = request.form['midi_file_path']
     # Obtener el tempo e instrumento seleccionados por el usuario desde el formulario
@@ -158,13 +210,32 @@ def modify_midi():
     return render_template('index.html', wav_url=wav_url, midi_url=midi_url)
 @app.route('/get_midi/<filename>')
 def get_midi(filename):
+    """
+    Descarga un archivo MIDI desde el directorio 'outputs'.
+
+    Args:
+        filename (str): Nombre del archivo MIDI a descargar.
+
+    Returns:
+        flask.Response: Archivo MIDI como respuesta para descarga.
+    """
     filepath = f"outputs/{filename}"
     return send_file(filepath, as_attachment=True)
 
 @app.route('/get_wav/<filename>')
 def get_wav(filename):
+    """
+    Descarga un archivo WAV desde el directorio 'outputs'.
+
+    Args:
+        filename (str): Nombre del archivo WAV a descargar.
+
+    Returns:
+        flask.Response: Archivo WAV como respuesta para descarga.
+    """
     filepath = f"outputs/{filename}"
     return send_file(filepath, as_attachment=True, mimetype="audio/wav")
+
 if __name__ == '__main__':
     from waitress import serve
     serve(app, host="0.0.0.0", port=8080)
