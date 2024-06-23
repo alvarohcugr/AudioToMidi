@@ -1,0 +1,1 @@
+En este directoria se guardan temporalmente las salidas de la aplicación 
