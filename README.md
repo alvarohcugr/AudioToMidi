@@ -64,8 +64,11 @@ El fichero TFG_Colab.ipynb contiene el código de entrenamiento y evaluación de
 ## Kaggle
 Para entrenar y evaluar los dos modelos finales de la aplicación en el dataset MAESTRO, se han usado dos Notebooks, uno para entrenamiento y otro para evaluación en el conjunto de prueba. En el historial de versiones se pueden ver los resultados y el código de las ejecuciones.
 ### Entrenamiento
-Notebook TFG_MAESTRO. Versión 13 --> Entrenamiento modelo BP2, 30 épocas: `https://www.kaggle.com/code/alvarohernandezc/tfg-maestro?scriptVersionId=176879493`
+Notebook TFG_MAESTRO. Versión 13 --> Entrenamiento modelo BP2, 30 épocas: 
+`https://www.kaggle.com/code/alvarohernandezc/tfg-maestro?scriptVersionId=176879493`
+
 Notebook TFG_MAESTRO. Versión 19 --> Entrenamiento modelo UNetH, 13 épocas: `https://www.kaggle.com/code/alvarohernandezc/tfg-maestro?scriptVersionId=181816880`
+
 Notebook TFG_MAESTRO. Versión 22 --> Continuación entrenamiento del modelo UNetH, 11 épocas: `https://www.kaggle.com/code/alvarohernandezc/tfg-maestro?scriptVersionId=183657756`
 
 
